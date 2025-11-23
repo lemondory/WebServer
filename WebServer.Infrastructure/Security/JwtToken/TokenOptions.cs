@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace WebServer.Infrastructure.Security.JwtToken
+{
+    public class TokenOptions
+    {
+        public static string Audience { get; set; } = string.Empty;
+        public static string Issuer { get; set; } = string.Empty;
+        public static int AccessTokenExpiration { get; set; }
+        public static int RefreshTokenExpiration { get; set; }
+        public static string SecurityKey { get; set; } = string.Empty;
+    }
+}
