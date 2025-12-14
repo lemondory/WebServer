@@ -29,7 +29,6 @@
   <ItemGroup>
     <ProjectReference Include="..\WebServer.Contracts\WebServer.Contracts.csproj" />
     <ProjectReference Include="..\WebServer.Domain\WebServer.Domain.csproj" />
-    <ProjectReference Include="..\WebServer.Persistance\WebServer.Persistance.csproj" />
     <ProjectReference Include="..\WebServer.Shared\WebServer.Shared.csproj" />
   </ItemGroup>
 

@@ -17,9 +17,9 @@ namespace WebServer.Persistance
             services.AddSingleton<IConnectionStringProvider, ConnectionStringProvider>();
             services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
             
-            // Named Lock (동시성 제어)
-            services.AddScoped<INamedLockService, NamedLockService>();
-            services.AddTransient<INamedLockExecutor, NamedLockExecutor>();
+            // Advisory Lock (동시성 제어 - PostgreSQL Advisory Lock 사용)
+            services.AddScoped<IAdvisoryLockService, AdvisoryLockService>();
+            services.AddTransient<IAdvisoryLockExecutor, AdvisoryLockExecutor>();
 
             // Redis Cache
             var config = ConfigurationOptions.Parse("localhost:6379");

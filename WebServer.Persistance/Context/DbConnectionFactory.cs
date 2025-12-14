@@ -1,45 +1,57 @@
-﻿using Dapper.FastCrud;
-using WebServer.Contracts.Infrastructure;
+﻿using WebServer.Contracts.Infrastructure;
 using WebServer.Domain.Enums;
 using Microsoft.Extensions.Configuration;
-using MySqlConnector;
-using System.Data;
+using SqlSugar;
 
 namespace WebServer.Persistance.Context
 {
     public class DbConnectionFactory : IDbConnectionFactory
     {
         private readonly IConfiguration _configuration;
+        private readonly Dictionary<DatabaseType, ISqlSugarClient> _clients;
 
         public DbConnectionFactory(IConfiguration configuration)
         {
             _configuration = configuration;
+            _clients = new Dictionary<DatabaseType, ISqlSugarClient>();
+            InitializeClients();
         }
 
-        public async Task<MySqlConnection> CreateConnectionAsync(DatabaseType dbType)
+        private void InitializeClients()
         {
-            try
+            foreach (DatabaseType dbType in Enum.GetValues(typeof(DatabaseType)))
             {
                 var connectionString = _configuration.GetConnectionString(dbType.ToString());
-
+                
                 if (string.IsNullOrEmpty(connectionString))
                     throw new InvalidOperationException($"Connection string for database '{dbType}' is not configured.");
 
-                // 👉 FastCrud에 MySQL 사용을 명시적으로 지정 DB Column Name [], `` 사용에 대해서 처리가 되기 때문에 DB 변경 시 변경 필수
-                OrmConfiguration.DefaultDialect = SqlDialect.MySql;
+                var client = new SqlSugarClient(new ConnectionConfig
+                {
+                    ConnectionString = connectionString,
+                    DbType = DbType.PostgreSQL,
+                    IsAutoCloseConnection = true,
+                    InitKeyType = InitKeyType.Attribute
+                });
 
-                var connection = new MySqlConnection(connectionString);
-                await connection.OpenAsync();
-                return connection;
+                // AOP 설정 (쿼리 로깅)
+                client.Aop.OnLogExecuting = (sql, pars) =>
+                {
+                    // 느린 쿼리 감지 및 로깅은 나중에 추가
+                };
+
+                _clients[dbType] = client;
             }
-            catch (Exception ex)
+        }
+
+        public ISqlSugarClient GetClient(DatabaseType dbType)
+        {
+            if (!_clients.TryGetValue(dbType, out var client))
             {
-                // 로깅 시스템에 예외 기록
-                Console.WriteLine($"[DB CONNECTION ERROR] [{dbType}] {ex.Message}");
-
-                // 필요 시, 커스텀 예외로 래핑해서 던질 수 있음
-                throw new Exception($"Failed to create DB connection for {dbType}", ex);
+                throw new InvalidOperationException($"Database client for '{dbType}' is not configured.");
             }
+
+            return client;
         }
     }
 }
